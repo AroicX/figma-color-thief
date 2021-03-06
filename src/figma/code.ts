@@ -3,11 +3,21 @@ const start = Date.now();
 
 // show UI
 figma.showUI(__html__, {
-  width: 480,
+  width: 500,
   height: 570
 });
 
+let timesSelected = 0;
+
 function getContent(selection: any) {
+  if (!selection && timesSelected > 0) {
+    figma.notify('Please select an image');
+    return;
+  } else if (!selection && timesSelected === 0) {
+    figma.closePlugin('Please Select An Image Or A Frame 😒');
+    return;
+  }
+
   switch (selection.type) {
     case 'RECTANGLE':
       if (selection.fills && selection.fills[0]?.type === 'IMAGE') {
@@ -31,7 +41,13 @@ function getContent(selection: any) {
             imageLink = `background-image: url('./images/"${imageName}.png')}`;
           });
 
+        timesSelected += 1;
+
         console.log(imageLink);
+      }
+      if (timesSelected > 0) {
+        figma.notify('Please select an image');
+        return;
       } else {
         figma.closePlugin('Please Select An Image Or A Frame 😒');
       }
@@ -55,6 +71,9 @@ figma.ui.onmessage = event => {
   if (event.type === 'add-selection') {
     let selected = figma.currentPage.selection['0'];
     getContent(selected);
+  }
+  if (event.type === 'export-palettes') {
+    console.log(event.palettes);
   }
 };
 
