@@ -1,0 +1,7 @@
+{
+	"name": "Color-thief 🥶",
+	"id": "950021064390069245",
+	"api": "1.0.0",
+	"main": "dist/code.js",
+	"ui": "dist/ui.html"
+}
