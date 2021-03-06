@@ -6,10 +6,14 @@
     </header>
 
     <main class="c-main c-container">
+
+      <button class="button" @click="addSelection()">add</button>
+      <div id="container"></div>
+
       <div class="c-image" v-if="image.src">
         <p class="c-image__title">{{ image.name }}</p>
         <div class="c-image__preview">
-          <img :src="image.src" :alt="image.name" />
+          <img id="preview-image" :src="image.src" :alt="image.name" height="100px" />
         </div>
       </div>
 
@@ -28,102 +32,134 @@
 </template>
 
 <script>
-import '../figma/figma-ds/js/selectMenu';
-import '../figma/figma-ds/js/iconInput';
-import '../figma/figma-ds/js/disclosure';
-import { b64toBlob, formatBytes } from './utilis/transformers';
+  import '../figma/figma-ds/js/selectMenu';
+  import '../figma/figma-ds/js/iconInput';
+  import '../figma/figma-ds/js/disclosure';
+  import {
+    b64toBlob,
+    rgbToHex,
+    colourName
+  } from './utilis/transformers';
 
-export default {
-  data() {
-    return {
-      imageArr: [],
-      blob: [],
-      notify: false,
-      warning: null,
-      image: {
-        src: null,
-        name: ''
-      }
-    };
-  },
+  export default {
+    data() {
+      return {
+        imageArr: [],
+        blob: [],
+        notify: false,
+        warning: null,
+        image: {
+          src: null,
+          name: ''
+        }
+      };
+    },
 
-  components: {
-    // Welcome
-  },
+    components: {
+      // Welcome
+    },
 
-  mounted() {
-    // Initialize the figma-ds components
-    window.selectMenu.init();
-    window.iconInput.init();
-    window.disclosure.init();
+    mounted() {
+      // Initialize the figma-ds components
+      window.selectMenu.init();
+      window.iconInput.init();
+      window.disclosure.init();
 
-    window.onmessage = event => {
-      const { type, name, data } = event.data.pluginMessage;
+      window.onmessage = event => {
+        const {
+          type,
+          name,
+          data
+        } = event.data.pluginMessage;
 
-      if (type === 'image') {
-        this.imageArr.push({
-          name: name.replace(/\s+/g, ''),
-          image: data
+        if (type === 'image') {
+          this.imageArr = []
+          this.imageArr.push({
+            name: name.replace(/\s+/g, ''),
+            image: data
+          });
+
+          let b64Data = `${data}`;
+          this.imageHandler(event, b64Data);
+        }
+      };
+
+
+
+
+    },
+    methods: {
+      generatePalette() {
+        var container = document.getElementById('container');
+        container.innerHTML = '';
+        var preview_image = document.getElementById('preview-image');
+
+        var colorThief = new ColorThief();
+
+        var colour = colorThief.getColor(preview_image);
+        var palettes = colorThief.getPalette(preview_image);
+        colour = rgbToHex(colour[0], colour[1], colour[2]);
+        var colour_name = colourName(colour);
+        container.innerHTML += `<h3 >Dominant Colour</h3>\n\
+        <div ><button style=background-color:${colour}></button><br />\n\
+        <p >${colour}</p><p >${colour_name}</p></div>`;
+        container.innerHTML +=
+          "<h3 >Colour Palette</h3>";
+        palettes.forEach((palette) => {
+          var colour = rgbToHex(palette[0], palette[1], palette[2]);
+          var colour_name = colourName(colour);
+          container.innerHTML += `<div >\n\
+           <button  style=background-color:${colour}></button>\n\
+          <p >${colour}</p><p >${colour_name}</p>\n\
+          </div>`;
         });
 
-        let b64Data = `${data}`;
-        this.imageHandler(event, b64Data);
-      }
-    };
-  },
-  methods: {
-    addSelection() {
-      this.notify = false;
-      parent.postMessage(
-        {
-          pluginMessage: {
-            type: 'add-selection'
-          }
-        },
-        '*'
-      );
-    },
-    imageHandler(event, b64Data, type) {
-      var contentType = 'image/png';
-      var blob = b64toBlob(b64Data, contentType);
-      console.log(blob);
-      var blobUrl = URL.createObjectURL(blob);
 
-      // create temporary url
-      // let parent = document.getElementById('image-holder');
-      // var div = document.createElement('div');
-      // var imageName = document.createElement('span');
-      // var input = document.createElement('input');
-      // var img = document.createElement('img');
-      // img.src = blobUrl;
-      this.image.src = blobUrl;
-      this.image.name = `${event.data.pluginMessage.name.replace(/\s+/g, '') ||
+
+
+
+
+
+
+      },
+      addSelection() {
+        this.notify = false;
+        parent.postMessage({
+            pluginMessage: {
+              type: 'add-selection'
+            }
+          },
+          '*'
+        );
+      },
+      imageHandler(event, b64Data, type) {
+        var contentType = 'image/png';
+        var blob = b64toBlob(b64Data, contentType);
+        console.log(blob);
+        var blobUrl = URL.createObjectURL(blob);
+
+
+        this.image.src = blobUrl;
+        this.image.name = `${event.data.pluginMessage.name.replace(/\s+/g, '') ||
         'image'}`;
-      // img.height = 200;
-      // imageName.className = 'font-sm';
-      // imageName.innerHTML = `${event.data.pluginMessage.name.replace(
-      //   /\s+/g,
-      //   ''
-      // ) || 'image'} <br/> <b class="bold">Size:</b> ${formatBytes(blob.size)}`;
 
-      // div.appendChild(img);
-      // div.appendChild(imageName);
 
-      //
-      // parent.appendChild(div);
+        console.log(this.image);
+        this.blob = [];
+        this.blob.push({
+          name: event.data.pluginMessage.name,
+          image: blob
+        });
+        setTimeout(() => {
 
-      console.log(this.image);
-      this.blob = [];
-      this.blob.push({
-        name: event.data.pluginMessage.name,
-        image: blob
-      });
-      console.log('The Blob', this.blob);
+          this.generatePalette();
+        }, 100);
+        console.log('The Blob', this.blob);
+      }
     }
-  }
-};
+  };
 </script>
 
 <style lang="scss">
-@import '../figma/figma-ds/figma-plugin-ds';
+  @import '../figma/figma-ds/figma-plugin-ds';
 </style>
