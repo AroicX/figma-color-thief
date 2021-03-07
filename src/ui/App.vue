@@ -90,16 +90,16 @@ export default {
     window.disclosure.init();
 
     window.onmessage = event => {
-      const { type, name, data } = event.data.pluginMessage;
+      const message = event.data.pluginMessage;
 
-      if (type === 'image') {
+      if (message?.type && message?.type === 'image') {
         this.imageArr = [];
         this.imageArr.push({
-          name: name.replace(/\s+/g, ''),
-          image: data
+          name: message.name.replace(/\s+/g, ''),
+          image: message.data
         });
 
-        let b64Data = `${data}`;
+        let b64Data = `${message.data}`;
         this.imageHandler(event, b64Data);
       }
     };
@@ -125,21 +125,6 @@ export default {
         );
       });
       this.palettes.push(paletteObject);
-      // console.log(this.palettes);
-      // colour = rgbToHex(colour[0], colour[1], colour[2]);
-      // var colour_name = colourName(colour);
-      // container.innerHTML += `<h3 >Dominant Colour</h3>\n\
-      //   <div ><button style=background-color:${colour}></button><br />\n\
-      //   <p >${colour}</p><p >${colour_name}</p></div>`;
-      // container.innerHTML += '<h3 >Colour Palette</h3>';
-      // palettes.forEach(palette => {
-      //   var colour = rgbToHex(palette[0], palette[1], palette[2]);
-      //   var colour_name = colourName(colour);
-      //   container.innerHTML += `<div >\n\
-      //      <button  style=background-color:${colour}></button>\n\
-      //     <p >${colour}</p><p >${colour_name}</p>\n\
-      //     </div>`;
-      // });
     },
     addSelection() {
       this.notify = false;

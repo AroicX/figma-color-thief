@@ -1,6 +1,4 @@
-import {
-  rejects
-} from 'assert';
+import { rejects } from 'assert';
 import axios from 'axios';
 var fs = require('fs');
 import FileReader from 'filereader';
@@ -45,42 +43,29 @@ export function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-
 export function generatePalette() {
   var container = document.getElementById('container');
   container.innerHTML = '';
   var preview_image = document.getElementById('preview-image');
 
-
-
-
   var vibrant = new Vibrant(preview_image);
-  var swatches = vibrant.swatches()
+  var swatches = vibrant.swatches();
   for (var swatch in swatches) {
     console.log(swatches);
 
     if (swatches.hasOwnProperty(swatch) && swatches[swatch]) {
       var div = document.createElement('div');
-      div.style.width = '200px'
-      div.style.height = '50px'
-      div.style.padding = '20px'
-      div.style.background = swatches[swatch].getHex()
+      div.style.width = '200px';
+      div.style.height = '50px';
+      div.style.padding = '20px';
+      div.style.background = swatches[swatch].getHex();
 
       div.innerHTML = swatches[swatch].getHex();
 
-
-
-      container.append(div)
+      container.append(div);
       // console.log(swatch, swatches[swatch].getHex())
-
     }
-
   }
-
-
-
-
-
 
   /*
    * Results into:
@@ -92,18 +77,17 @@ export function generatePalette() {
    */
 }
 
-
 export const rgbToHex = (r, g, b) =>
-  "#" +
+  '#' +
   [r, g, b]
-    .map((x) => {
+    .map(x => {
       const hex = x.toString(16);
-      return toUpper(hex.length === 1 ? "0" + hex : hex);
+      return toUpper(hex.length === 1 ? '0' + hex : hex);
     })
-    .join("");
+    .join('');
 
-    export const toUpper = (string) => {
-  var replacedText = string.replace(/[^A-Z0-9]/g, function (match) {
+export const toUpper = string => {
+  var replacedText = string.replace(/[^A-Z0-9]/g, function(match) {
     if (match != undefined) {
       return match.toUpperCase();
     }
@@ -111,6 +95,27 @@ export const rgbToHex = (r, g, b) =>
   return replacedText;
 };
 
-export const colourName = (colour) => {
+export const hexToRgb = hex => {
+  const color = hex.charAt(0) === '#' ? hex.substring(1, 7) : hex;
+  const r = parseInt(color.substring(0, 2), 16) / 255; // hexToR
+  const g = parseInt(color.substring(2, 4), 16) / 255; // hexToG
+  const b = parseInt(color.substring(4, 6), 16) / 255; // hexToB
+  return { r, g, b };
+};
+
+export const colourName = colour => {
   return ntc.name(colour)[1];
+};
+
+export const getTextColor = bgColor => {
+  const { r, g, b } = hexToRgb(bgColor);
+  const uicolors = [r, g, b];
+  const c = uicolors.map(col => {
+    if (col <= 0.03928) {
+      return col / 12.92;
+    }
+    return Math.pow((col + 0.055) / 1.055, 2.4);
+  });
+  const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return L > 0.5 ? { r: 0, g: 0, b: 0 } : { r: 1, g: 1, b: 1 };
 };
